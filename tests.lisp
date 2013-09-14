@@ -11,10 +11,55 @@
 (5am:run! 'handle-player-action-tests-calls)
 (5am:run! 'get-acting-test)
 (5am:run! 'advance-acting-test)
+(5am:run! 'get-bet-test)
+(5am:run! 'adjust-bets-test)
+(5am:run! 'pay-winners-test)
+(5am:run! 'adjust-test)
 (5am:run! 'all-tests)
 
 (5am:def-suite all-tests :description "cl-poker tests")
 (5am:in-suite all-tests)
+
+(5am:test adjust-test
+  (let* ((bet-list (list (cons 100
+			      (list (cons (make-player "fyv") 50)
+				    (cons (make-player "wag") 100)))))
+	(winners (list (car (first (cdr (car bet-list))))
+		       (car (second (cdr (car bet-list)))))))
+    (adjust winners bet-list)
+    (5am:is (= (get-bet (car winners) (car bet-list)) 0))
+    (5am:is (= (get-bet (cadr winners) (car bet-list)) 0)))
+  (let* ((bet-list (list (cons 100
+			      (list (cons (make-player "fyv") 50)
+				    (cons (make-player "wag") 100)))))
+	 (winners (list (car (first (cdr (car bet-list)))))))
+
+    (adjust winners bet-list)
+    (print bet-list)
+    (5am:is (= (get-bet (car winners) (car bet-list)) 0))
+    (5am:is (= (get-bet (car (second (cdr (car bet-list)))) (car bet-list)) 50))))
+
+(5am:test pay-winners-test
+  (let* ((list-of-winners (list (make-player "fyv") (make-player "wag")))
+	 (bet-list (list (cons 100 (mapcar #'(lambda (x) (cons x 100))
+					   list-of-winners)))))
+    (pay-winners list-of-winners bet-list)
+    (5am:is (= (payout (car list-of-winners)) 100))
+    (5am:is (= (payout (cadr list-of-winners)) 100))))
+
+(5am:test adjust-bets-test
+  (let ((bet-list (list 20 (cons (make-player "wag") 30)
+			(cons (make-player "fyv") 20))))
+    (5am:is (= (get-bet (caar (last bet-list)) bet-list) 20))
+    (adjust-bets (caar (last bet-list)) bet-list)
+    (5am:is (= (get-bet (caadr bet-list) bet-list) 10))))
+
+(5am:test get-bet-test
+  (let* ((p (make-player "fyv"))
+	 (bet-list (list 20 (cons (make-player "wag") 30) (cons p 20))))
+    (5am:is (= (get-bet p bet-list) 20))
+    (5am:is (= (get-bet (car (cadr bet-list)) bet-list) 30))
+    (5am:is (not (get-bet (make-player "jane") bet-list)))))
 
 (5am:test advance-acting-test
   (let* ((p (make-player "fyv"))
